@@ -70,7 +70,7 @@ PLAY_SCHEMA = cv.Schema(
     }
 )
 
-STOP_SCHEMA = cv.maybe_simple_id(
+STOP_SCHEMA = automation.maybe_simple_id(
     {
         cv.GenerateID(): cv.use_id(DtmfTone),
     }
