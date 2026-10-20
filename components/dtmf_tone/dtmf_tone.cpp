@@ -96,7 +96,7 @@ void DtmfTone::setup() {
   low.channel = LEDC_CHANNEL_0;
   low.intr_type = LEDC_INTR_DISABLE;
   low.timer_sel = LEDC_TIMER_0;
-  low.duty = 128;
+  low.duty = 0;
   low.hpoint = 0;
   err = ledc_channel_config(&low);
   if (err != ESP_OK) {
@@ -113,7 +113,8 @@ void DtmfTone::setup() {
       return;
     }
   }
-  this->write_pair(128, 128);
+  // Duty 0: pin stale niski, bez zboczy 200 kHz. Srodek skali tylko w trakcie tonu.
+  this->write_pair(0, 0);
 
   const uint32_t res_hz = 10000000;
   gptimer_config_t cfg = {};
@@ -230,7 +231,7 @@ int IRAM_ATTR DtmfTone::next_symbol(uint8_t from) const {
 
 void IRAM_ATTR DtmfTone::on_sample() {
   if (this->state_ == ST_IDLE) {
-    this->write_pair(128, 128);
+    this->write_pair(0, 0);
     return;
   }
 
@@ -248,14 +249,14 @@ void IRAM_ATTR DtmfTone::on_sample() {
         // wpadamy w render ponizej
       } else {
         this->state_ = ST_IDLE;
-        this->write_pair(128, 128);
+        this->write_pair(0, 0);
         return;
       }
     } else {
       const int nxt = this->next_symbol(this->seq_pos_ + 1);
       if (nxt < 0 || !this->select_symbol(static_cast<uint8_t>(nxt))) {
         this->state_ = ST_IDLE;
-        this->write_pair(128, 128);
+        this->write_pair(0, 0);
         return;
       }
     }
@@ -297,7 +298,7 @@ void DtmfTone::loop() {
   if (this->timer_running_ && this->state_ == ST_IDLE && this->timer_ != nullptr) {
     gptimer_stop(static_cast<gptimer_handle_t>(this->timer_));
     this->timer_running_ = false;
-    this->write_pair(128, 128);
+    this->write_pair(0, 0);
   }
 }
 
@@ -308,7 +309,7 @@ void DtmfTone::stop() {
   this->timer_running_ = false;
   this->state_ = ST_IDLE;
   if (this->ledc_ready_) {
-    this->write_pair(128, 128);
+    this->write_pair(0, 0);
   }
 }
 
