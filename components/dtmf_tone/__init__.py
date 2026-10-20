@@ -46,6 +46,16 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 async def to_code(config):
+    # ESPHome excludes unused IDF drivers. driver/gptimer.h and driver/ledc.h
+    # live in these components and are not linked unless requested.
+    try:
+        from esphome.components.esp32 import include_builtin_idf_component
+    except ImportError:
+        include_builtin_idf_component = None
+    if include_builtin_idf_component is not None:
+        include_builtin_idf_component("esp_driver_gptimer")
+        include_builtin_idf_component("esp_driver_ledc")
+
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     cg.add(var.set_pin_low(config[CONF_PIN_LOW]))
